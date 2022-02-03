@@ -1,2 +1,5 @@
 *.txt
 *.pdf
+*.zip
+.venv
+Data/
