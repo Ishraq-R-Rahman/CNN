@@ -1,42 +1,33 @@
+from loader import load_MNIST_dataset , read_input
+from utils import create_filters , gradient_descent, get_strides_list
 import math
-from mlxtend.data import loadlocal_mnist
-import platform
+import numpy as np
 
-def load_MNIST_dataset():
-    if not platform.system() == 'Windows':
-        X, y = loadlocal_mnist(
-                images_path='../Data/MNIST/train-images-idx3-ubyte', 
-                labels_path='../Data/MNIST/train-labels-idx1-ubyte')
-        X_t , y_t = loadlocal_mnist(
-                images_path='../Data/MNIST/t10k-images-idx3-ubyte', 
-                labels_path='../Data/MNIST/t10k-labels-idx1-ubyte')
 
-    else:
-        X, y = loadlocal_mnist(
-                images_path='../Data/MNIST/train-images.idx3-ubyte', 
-                labels_path='../Data/MNIST/train-labels.idx1-ubyte')
-        X_t , y_t = loadlocal_mnist(
-                images_path='../Data/MNIST/t10k-images-idx3-ubyte', 
-                labels_path='../Data/MNIST/t10k-labels.idx1-ubyte')
-    
-    # print('Dimensions: %s x %s' % (X.shape[0], X.shape[1]))
-    # print('\n1st row', X[0])
+def train_model( train_data , learning_rate , MU , filters , biases_list , theta , bias , relu_activation , max_pooling_layers ,stride,  epochs = 2 , batch_size = 2 ):
 
-    X_train = X.reshape( (X.shape[0] , int(math.sqrt(X.shape[1])) , int(math.sqrt(X.shape[1])) , 1 ) )
-    y_train = y
+        cost = []
+        acc = []
 
-    X_test = X_t.reshape( (X_t.shape[0] , int(math.sqrt(X_t.shape[1])) , int(math.sqrt(X_t.shape[1])) , 1 ) )
-    y_test = y
+        for epoch in range(epochs):
+                batches = [ train_data[ k:k + batch_size] for k in list(range( 0, train_data.shape[0] , batch_size ) ) ]
 
-    # #checking the shape after reshaping
-    # print(X_train.shape)
-    # print(X_test.shape)
+                x = 0
 
-    return (X_train , y_train ) , (X_test , y_test)
-    
-
+                for batch in batches:
+                        gradient_descent( batch=batch , learning_rate=learning_rate , MU=MU , filters=filters , biases_list=biases_list , theta=theta , bias=bias , cost=cost , acc=acc ,stride=stride, img_width=int(math.sqrt(train_data.shape[1]-1)) , img_depth=1 , relu_activation=relu_activation , max_pooling_layers = max_pooling_layers)
+                        pass
+        pass
 
 if __name__ == '__main__':
-    training_data , test_data = load_MNIST_dataset()
-    print(test_data[0].shape)
-    pass
+        training_data , test_data = load_MNIST_dataset()
+        convolution_layers , max_pooling_layers , output_dimension , relu_activation = read_input()
+        filters , theta , initial_bias , biases = create_filters(convolution_layers , math.sqrt(training_data.shape[1] - 1) , output_dimension )
+        
+        stride = get_strides_list( convolution_layers )
+
+        learning_rate = 0.01
+        batch_size = 2
+
+        train_model( train_data= training_data , learning_rate = learning_rate , MU=0.95 , filters = filters , biases_list= biases , theta= theta , bias=initial_bias , relu_activation = relu_activation , max_pooling_layers = max_pooling_layers , stride = stride)
+        pass
