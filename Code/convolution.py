@@ -1,10 +1,11 @@
 import numpy as np
+import math
 
 def max_pooling_convolution_layer( convolution_layer , pool_dimension_w , pool_dimension_h , stride ):
 
     ( depth , width , _ ) = convolution_layer.shape
 
-    pool = np.zeros( ( depth , int( ( width - pool_dimension_w ) / stride + 1 ) , int( ( width - pool_dimension_h ) / stride + 1 ) ) )
+    pool = np.zeros( ( depth , math.ceil( ( width - pool_dimension_w ) / stride + 1 ) , math.ceil( ( width - pool_dimension_h ) / stride + 1 ) ) )
 
     print(pool.shape)
 
@@ -18,7 +19,7 @@ def max_pooling_convolution_layer( convolution_layer , pool_dimension_w , pool_d
 
             while j < width:
 
-                pool[ idx , int(i/2) , int(j/2) ] = np.max( convolution_layer[ idx , i : i + pool_dimension_w , j : j + pool_dimension_h ] )
+                pool[ idx , math.ceil(i/2) , math.ceil(j/2) ] = np.max( convolution_layer[ idx , i : i + pool_dimension_w , j : j + pool_dimension_h ] )
 
                 j += stride
             
@@ -88,8 +89,8 @@ class Convolution:
                         
                         filter_dim = self.filters[layer_idx][i].shape[1]
 
-                        # layer_considered = self.image if layer_idx == 0 else convolution_layers[layer_idx-1]
-                        layer_considered = self.image if layer_idx == 0 else pooled_layer
+                        layer_considered = self.image if layer_idx == 0 else convolution_layers[layer_idx-1]
+                        # layer_considered = self.image if layer_idx == 0 else pooled_layer
                         
                         # print('In here : ' , layer_considered[ : , x : x + filter_dim , y : y + filter_dim ].shape )
                         # print('Out there : ' , self.filters[layer_idx][i].shape )
@@ -103,13 +104,15 @@ class Convolution:
             # Pooling Layer and stride
             if len(self.max_pooling_layers[layer_idx]) != 0:
                 pooled_layer = max_pooling_convolution_layer( convolution_layers[layer_idx] , self.max_pooling_layers[layer_idx][0] , self.max_pooling_layers[layer_idx][1] , self.stride[layer_idx]   )
-                
 
             else:
                 pooled_layer = convolution_layers[layer_idx]
+                print(pooled_layer.shape)
+                
         
+
         # Flatten Layer
-        fully_connected_layer = pooled_layer.reshape( int(w[layer_idx]/2) * int(w[layer_idx]/2) * depth_list[layer_idx] , 1)
+        fully_connected_layer = pooled_layer.reshape( int(w[-1]/2) * int(w[-1]/2) * depth_list[-1] , 1)
         output_layer = self.theta.dot(fully_connected_layer) + self.bias
 
         print(output_layer.shape)
